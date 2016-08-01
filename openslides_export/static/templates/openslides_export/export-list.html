@@ -1,0 +1,248 @@
+<div class="header">
+  <div class="title">
+    <h1 translate>Export</h1>
+  </div>
+</div>
+
+<style type="text/css">
+  .col1 ul {
+    margin-left: 0;
+  }
+  .preview {
+    border: #ccc 1px solid;
+    width:100%;
+    padding: 10px;
+  }
+  .preview .metabox {
+    background-color: #eee;
+    border: #ccc 1px solid;
+    width: 100%;
+    padding: 10px;
+  }
+</style>
+
+<div class="details">
+
+  <uib-tabset>
+    <!-- Motions -->
+    <uib-tab heading="{{ 'Motions' | translate }}">
+      <div class="form-group">
+        <label for="form_select_motion" translate>Motion</label>
+        <select chosen
+            multiple
+            ng-model="selectedMotions"
+            ng-options="motion.getTitle() for motion in motions track by motion.id"
+            class="form-control"
+            id="form_select_motion">
+          <option value="all" translate>All motions</option>
+        </select>
+      </div>
+      <!-- motion export preview -->
+      <div ng-if="selectedMotions.length > 0">
+        <h3><translate>Preview</translate>:</h3>
+        <div class="pull-right">
+          <a href="" ng-click="exportMotion('html')"
+              class="btn btn-primary" translate>HTML</a>
+          <a href="" ng-click="exportMotion('docx')"
+              class="btn btn-primary" translate>DOCX</a>
+        </div>
+
+        <div class="preview" id="motionPreview">
+          <div ng-repeat="motion in selectedMotions">
+            <a href="#{{ $index+1 }}">{{ motion.agenda_item.getTitle() || motion.getTitle() }}</a>
+          </div>
+          <div ng-repeat="motion in selectedMotions">
+            <hr>
+            <a name="{{ $index+1 }}">
+              <h1>
+                <translate>Motion</translate> {{ motion.identifier }}:
+                {{ motion.agenda_item.getTitle() || motion.getTitle() }}
+              </h1>
+            </a>
+            <div ng-bind-html="motion.getText(version) | trusted"></div>
+
+            <!-- reason -->
+            <div ng-if="motion.getReason(version) != ''">
+              <h3 translate>Reason</h3>
+              <div ng-bind-html="motion.getReason() | trusted"></div>
+            </div>
+
+            <!-- meta information -->
+            <div class="metabox">
+              <h3><translate>Meta information</translate></h3>
+              <!-- State -->
+              <p>
+                <b><translate>State</translate></b>:
+                {{ motion.state.name | translate }}
+
+              <!-- Submitters -->
+              <p ng-if="motion.submitters.length > 0">
+                <b><translate>Submitters</translate></b>:
+                <span ng-repeat="submitter in motion.submitters">
+                  {{ submitter.get_full_name() }}{{$last ? '' : ', '}}
+                </span>
+              <!-- Supporters -->
+              <p ng-if="motion.supporters.length > 0">
+                <b><translate>Supporters</translate></b>:
+                <span ng-repeat="supporter in motion.supporters">
+                  {{ supporter.get_full_name() }}{{$last ? '' : ', '}}
+                </span>
+
+              <!-- Poll results -->
+              <p ng-if="motion.polls.length > 0">
+                <b><translate>Voting result</translate>:</b>
+                <div ng-repeat="poll in motion.polls | orderBy:'-id'" class="spacer">
+                  <div ng-show="poll.has_votes" class="pollresults">
+                    <strong ng-if="motion.polls.length > 1">
+                      <translate>Vote</translate> {{ motion.polls.length - $index }}:
+                    </strong>
+                    <table class="transparentTable spacer">
+                      <!-- yes -->
+                      <tr>
+                        <td>
+                          <span class="result_label"><translate>Yes</translate>:</span>
+                        <td ng-init="voteYes = poll.getVote(poll.yes)">
+                          <span class="result_value">
+                            {{ voteYes.value }} {{ voteYes.percentStr }}
+                          </span>
+                      <!-- no -->
+                      <tr>
+                        <td>
+                          <span class="result_label"><translate>No</translate>:</span>
+                        <td ng-init="voteNo = poll.getVote(poll.no)">
+                          <span class="result_value" >
+                            {{ voteNo.value }} {{ voteNo.percentStr }}
+                          </span>
+                      <!-- abstain -->
+                      <tr>
+                        <td>
+                          <span class="result_label"><translate>Abstain</translate>:</span>
+                        <td ng-init="voteAbstain = poll.getVote(poll.abstain)">
+                          <span class="result_value">
+                            {{ voteAbstain.value }} {{ voteAbstain.percentStr }}
+                          </span>
+                      <!-- valid votes -->
+                      <tr>
+                        <td ng-init="votesValid = poll.getVote(poll.votesvalid)">
+                          <span class="result_label"><translate>Valid votes</translate>:</span>
+                        <td>
+                          <span class="result_value">
+                            {{ votesValid.value }} {{ votesValid.percentStr }}
+                          </span>
+                      <!-- invalid votes -->
+                      <tr>
+                        <td>
+                          <span class="result_label"><translate>Invalid votes</translate>:</span>
+                        <td ng-init="votesInvalid = poll.getVote(poll.votesinvalid)">
+                          <span class="result_value">
+                            {{ votesInvalid.value }}
+                            <span ng-if="config('motions_poll_100_percent_base') == 'WITH_INVALID'">
+                              {{ votesInvalid.percentStr }}
+                            </span>
+                          </span>
+                      <!-- votes cast -->
+                      <tr class="total">
+                        <td>
+                          <span class="result_label"><translate>Votes cast</translate>:</span>
+                        <td ng-init="votesCast = poll.getVote(poll.votescast)">
+                          <span class="result_value">
+                            {{ votesCast.value }}
+                            <span ng-if="config('motions_poll_100_percent_base') == 'WITH_INVALID'">
+                              {{ votesCast.percentStr }}
+                            </span>
+                          </span>
+                    </table>
+                  </div>
+                </div>
+            </div> <!-- meta-->
+        </div>
+        </div>
+      </div>
+    </uib-tab>
+
+    <!-- Agenda -->
+    <uib-tab heading="{{ 'Agenda' | translate }}">
+      <div class="radio">
+        <label>
+          <input type="radio" value="full" name="agendaOptions" ng-model="selectedAgendaExport">
+          <translate>Full agenda</translate>
+      </div>
+      <div class="radio">
+        <label>
+          <input type="radio" value="listOfSpeakers" name="agendaOptions" ng-model="selectedAgendaExport">
+          <translate>Lists of speakers of each agenda item</translate>
+      </div>
+
+      <!-- agenda export preview -->
+      <div ng-if="selectedAgendaExport">
+        <h3><translate>Preview</translate>:</h3>
+        <!-- export format -->
+        <div class="pull-right">
+          <a href="" ng-click="exportAgenda('html')"
+              class="btn btn-primary" translate>HTML</a>
+          <a href="" ng-click="exportAgenda('csv')"
+              class="btn btn-primary" translate>CSV</a>
+        </div>
+
+        <div class="preview" id="agendaPreview">
+          <!-- agenda items -->
+          <div ng-if="selectedAgendaExport=='full'">
+            <h3 translate>Agenda</h3>
+            <table class="table table-striped">
+              <tr>
+                <th>
+                  <translate>Title</translate>
+                <th os-perms="agenda.can_see_hidden_items">
+                  <translate>Duration</translate>
+                <th os-perms="agenda.can_manage">
+                  <translate>Comment</translate>
+                <th>
+                  <translate>Internal item</translate>
+                <th>
+                  <translate>Done</translate>
+              <tr ng-repeat="item in items">
+                <td>
+                  {{ item.getListViewTitle() }}
+                <td os-perms="agenda.can_see_hidden_items">
+                  {{ item.duration }}
+                <td os-perms="agenda.can_manage">
+                  {{ item.comment }}
+                <td>
+                  {{ item.is_hidden }}
+                <td>
+                  {{ item.closed }}
+              </table>
+          </div>
+
+          <!-- list of speakers -->
+          <div ng-if="selectedAgendaExport=='listOfSpeakers'">
+            <h3 translate>List of speakers</h3>
+            <table class="table table-striped">
+              <tr>
+                <th translate>Agenda item
+                <th translate>Person
+                <th translate>Start time
+                <th translate>End time</th>
+              <tr ng-repeat="item in items">
+                <td>
+                  {{ item.getListViewTitle() }}
+                <td>
+                  <div ng-repeat="speaker in item.speakers">
+                    {{ speaker.user.get_full_name() }}
+                  </div>
+                <td>
+                  <div ng-repeat="speaker in item.speakers">
+                    {{ speaker.begin_time | date:'yyyy-MM-dd HH:mm:ss' }}
+                  </div>
+                <td>
+                  <div ng-repeat="speaker in item.speakers">
+                    {{ speaker.end_time | date:'yyyy-MM-dd HH:mm:ss' }}
+                  </div>
+              </table>
+          </div>
+        </div>
+      </div>
+    </uib-tab>
+  </uib-tabset>
+
+</div>

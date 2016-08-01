@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 
-from openslides.core.signals import post_database_setup
-from openslides.participant.models import Group
+from openslides.users.models import Group
 
 
-@receiver(post_database_setup, dispatch_uid='openslides_export_add_permission')
 def openslides_export_add_permission(sender, **kwargs):
     """
     Adds the export permission the the builtin staff group.

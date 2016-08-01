@@ -1,12 +1,7 @@
 /*
- *  Style for openslides-csv-export
+ *  Style for openslides-export
  */
 
-.icon-export {
-    background-image: url("../img/glyphicons_359_file_export.png");
-    background-position: 0;
+.nav-tabs {
+    margin-left: 0 !important;
 }
-.leftmenu ul li.active a span.ico i.icon-export {
-    background-image: url("../img/glyphicons_359_file_export_white.png");
-}
-
